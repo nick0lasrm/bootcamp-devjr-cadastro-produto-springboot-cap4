@@ -1,35 +1,34 @@
 package com.bootcampdevjr.product_backend.resources;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.bootcampdevjr.product_backend.models.Product;
+import com.bootcampdevjr.product_backend.services.ProductService;
 
 @RestController
 @CrossOrigin
 public class ProductController {
 
-    // int id, String name, String description, int idCategory, boolean promotion,
-    // boolean newProduct, double price
-
-    private List<Product> products = new ArrayList<>();
+    @Autowired
+    private ProductService productService;
 
     @PostMapping("products")
     public ResponseEntity<Product> save(@RequestBody Product product) {
-        product.setId(products.size() + 1);
-        products.add(product);
+
+        product = productService.save(product);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -42,19 +41,25 @@ public class ProductController {
 
     @GetMapping("products/{id}")
     public ResponseEntity<Product> getProduct(@PathVariable int id) {
-
-        Product prod = products.stream()
-                .filter(p -> p.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
-
-        return ResponseEntity.ok(prod);
-
+        Product product = productService.getById(id);
+        return ResponseEntity.ok(product);
     }
 
     @GetMapping("products")
     public List<Product> getProducts() {
-        return products;
+        return productService.getAll();
+    }
+
+    @DeleteMapping("products/{id}")
+    public ResponseEntity<Void> removeProduct(@PathVariable int id) {
+        productService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("products/{id}")
+    public ResponseEntity<Void> updateProduct(@PathVariable int id, @RequestBody Product productUpdate) {
+        productService.update(id, productUpdate);
+        return ResponseEntity.ok().build();
     }
 
 }
